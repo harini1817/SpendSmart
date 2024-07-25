@@ -1,12 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using WebApp1.Models;
 
 namespace WebApp1.Services
 {
-    public class ApplicationDbcontext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     {
-        public ApplicationDbcontext(DbContextOptions options) : base(options) {
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+        {
         }
-        public DbSet<Product> Products {get; set;}
+
+        public DbSet<Product> Products { get; set; }
     }
 }

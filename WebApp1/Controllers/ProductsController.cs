@@ -2,15 +2,17 @@
 using Microsoft.AspNetCore.Mvc;
 using WebApp1.Models;
 using WebApp1.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebApp1.Controllers
 {
+
     public class ProductsController : Controller
     {
-        private readonly ApplicationDbcontext context;
+        private readonly ApplicationDbContext context;
 		private readonly IWebHostEnvironment environment;
 
-		public ProductsController(ApplicationDbcontext context, IWebHostEnvironment environment)
+		public ProductsController(ApplicationDbContext context, IWebHostEnvironment environment)
         {
             this.context = context;
 			this.environment = environment;
@@ -20,10 +22,14 @@ namespace WebApp1.Controllers
             var products = context.Products.ToList();
             return View(products);
         }
+
         public IActionResult Create()
         {
             return View();
         }
+        
+        [Authorize(Roles = "Admin")]
+
 
         [HttpPost]
 		public IActionResult Create(ProductDto productDto)
@@ -65,6 +71,8 @@ namespace WebApp1.Controllers
 
 			return RedirectToAction("Index","Products");
 		}
+        [Authorize(Roles = "Admin")]
+
 
         public ActionResult Edit(int id) 
         {
@@ -93,6 +101,9 @@ namespace WebApp1.Controllers
 
 			return View(productDto);
         }
+
+        [Authorize(Roles = "Admin")]
+
         [HttpPost]
         public ActionResult Edit(int id,ProductDto productDto)
         {
@@ -141,6 +152,8 @@ namespace WebApp1.Controllers
             return RedirectToAction("Index", "Products");
 
 		}
+        [Authorize(Roles = "Admin")]
+
 
         public IActionResult Delete(int id) 
         {

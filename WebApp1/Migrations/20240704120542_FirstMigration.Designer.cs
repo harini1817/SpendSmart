@@ -11,7 +11,7 @@ using WebApp1.Services;
 
 namespace WebApp1.Migrations
 {
-    [DbContext(typeof(ApplicationDbcontext))]
+    [DbContext(typeof(ApplicationDbContext))]
     [Migration("20240704120542_FirstMigration")]
     partial class FirstMigration
     {
