@@ -58,6 +58,11 @@ namespace Login.Controllers
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
+                    var user = await _userManager.FindByEmailAsync(model.Email);
+
+                    // Use a JavaScript snippet to store the email in localStorage
+                    TempData["UserEmail"] = user?.Email;
+
                     return RedirectToLocal(returnUrl);
                 }
                 else
@@ -72,6 +77,8 @@ namespace Login.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
+            HttpContext.Session.Clear();
+
             await _signInManager.SignOutAsync();
             return RedirectToAction(nameof(Login));
         }

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using WebApp1.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using CartItemService.Services; // Import the namespace for CartService
 
 namespace WebApp1
 {
@@ -25,13 +26,36 @@ namespace WebApp1
 
             // Add Identity services
             builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
+
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                // Ensure cookies are used securely
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SameSite = SameSiteMode.Strict; // Adjust as needed
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Ensure cookies are sent only over HTTPS
+                options.LoginPath = "/Account/Login"; // Path to the login page
+                options.LogoutPath = "/Account/Logout"; // Path to the logout page
+                options.AccessDeniedPath = "/Account/AccessDenied"; // Path for access denied
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // Adjust session expiration time as needed
+            });
 
             // Configure Role-Based Authorization
             builder.Services.AddAuthorization(options =>
             {
                 options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+            });
+            builder.Services.AddScoped<CartService>();
+
+            // Add session services
+            builder.Services.AddDistributedMemoryCache(); // Adds a default in-memory implementation of IDistributedCache
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30); // Set session timeout
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true; // Ensure the session cookie is used
             });
 
             var app = builder.Build();
@@ -52,6 +76,8 @@ namespace WebApp1
             app.UseAuthentication();
             app.UseAuthorization();
 
+            // Add session middleware
+            app.UseSession();
             // Configure endpoints
             app.MapControllerRoute(
                 name: "default",
@@ -64,6 +90,9 @@ namespace WebApp1
             app.MapControllerRoute(
                 name: "register",
                 pattern: "{controller=Account}/{action=Register}/{id?}");
+
+            
+
 
             app.MapRazorPages();
 

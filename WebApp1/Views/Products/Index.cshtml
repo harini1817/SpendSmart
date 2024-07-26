@@ -4,72 +4,87 @@
 
 <h2 class="text-center mb-5">List of Products</h2>
 <div class="row mb-5">
-	<div class="col">
-		@if (User.IsInRole("Admin"))
-		{
-			<a class="btn btn-primary" asp-controller="Products" asp-action="Create">New Product</a>
-
-		}
-		else
-		{
-			<select class="form-select" aria-label="Category Filter" id="categoryFilter">
-				<option value="">Select Category</option>
-				
-			</select>
-		}
-	</div>
-	<div class="col">
-		 
-	</div>
-
+    <div class="col">
+        @if (User.IsInRole("Admin"))
+        {
+            <a class="btn btn-primary" asp-controller="Products" asp-action="Create">New Product</a>
+        }
+        else
+        {
+            <select class="form-select" aria-label="Category Filter" id="categoryFilter">
+                <option value="">Select Category</option>
+            </select>
+        }
+    </div>
+    <div class="col">
+    </div>
 </div>
 
 <table class="table">
-	<thead>
-		<tr>
-			<th>ID</th>
-			<th>Name</th>
-			<th>Brand</th>
-			<th>Category</th>
-			<th>Price</th>
-			<th>Image</th>
-			<th>Created At</th>
-			<th>Action</th>
-		</tr>
-	</thead>
-	<tbody>
-		@foreach(var product in Model)
-		{
-			<tr>
-				<td>@product.Id</td>
-				<td>@product.Name</td>
-				<td>@product.Brand</td>
-				<td>@product.Category</td>
-				<td>@product.Price</td>
-				<td><img src="/products/@product.ImageFileName" width="100" /></td>
-				<td>@product.CreatedAt.ToString("MM/dd/yyyy")</td>
-
-				<td style="white-space:nowrap">
-					@if (User.IsInRole("Admin"))
-					{
-						<a class="btn btn-primary btn-sm" asp-controller="products" asp-action="Edit"
-						   asp-route-id="@product.Id">Edit</a>
-						<a class="btn btn-danger btn-sm" asp-controller="products" asp-action="Delete"
-						asp-route-id="@product.Id">Delete</a>
-					}
-					else
-					{
-						<a class="btn btn-primary btn-sm" asp-controller="products" asp-action="Edit"
-						   asp-route-id="@product.Id">Add To Cart</a>
-					}
-
-					
-
-				</td>
-
-			</tr>
-		}
-
-	</tbody>
-
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Brand</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Image</th>
+            <th>Created At</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var product in Model)
+        {
+            <tr>
+                <td>@product.Id</td>
+                <td>@product.Name</td>
+                <td>@product.Brand</td>
+                <td>@product.Category</td>
+                <td>@product.Price</td>
+                <td><img src="/products/@product.ImageFileName" width="100" /></td>
+                <td>@product.CreatedAt.ToString("MM/dd/yyyy")</td>
+                <td style="white-space:nowrap">
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a class="btn btn-primary btn-sm" asp-controller="products" asp-action="Edit" asp-route-id="@product.Id">Edit</a>
+                        <a class="btn btn-danger btn-sm" asp-controller="products" asp-action="Delete" asp-route-id="@product.Id">Delete</a>
+                    }
+                    else
+                    {
+                        <button class="btn btn-primary btn-sm add-to-cart" data-id="@product.Id" data-name="@product.Name" data-price="@product.Price">Add To Cart</button>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
 </table>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $(".add-to-cart").click(function (e) {
+            e.preventDefault();
+            var button = $(this);
+            var id = button.data("id");
+            var name = button.data("name");
+            var price = button.data("price");
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("AddToCart", "Products")',
+                data: { id: id, name: name, price: price },
+                success: function (response) {
+                    if (response.success) {
+                        alert("Product added to cart!");
+                    } else {
+                        alert("There was an error adding the product to the cart.");
+                    }
+                },
+                error: function () {
+                    alert("An unexpected error occurred.");
+                }
+            });
+        });
+    });
+</script>

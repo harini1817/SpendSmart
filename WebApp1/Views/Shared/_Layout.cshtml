@@ -8,36 +8,112 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
-    <!--<link rel="stylesheet" href="~/WebApp1.styles.css" asp-append-version="true" />-->
-
     <style>
-        /* Define the custom button style */
-        .btn-primary.custom-btn-primary {
-            background-color: #3204684d;
-            color: #000;
-            border: 0;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100px;
-            display: inline-block; /* Ensure button doesn't span full width */
+        #logoutform:hover {
+            background-color: #32046869;
         }
-
-            .btn-primary.custom-btn-primary:hover {
-                background-color: #32046869; /* Light color on hover */
-            }
 
         .navbar {
             background-color: rgb(179 160 227 / 21%);
         }
+
+        .dropdown-item {
+            display: block;
+            padding: .25rem 1rem;
+            clear: both;
+            font-weight: 400;
+            text-align: center;
+            text-decoration: none;
+            white-space: nowrap;
+            background-color: transparent;
+            border: 0 !important;
+        }
+
+            .dropdown-item:hover {
+                background-color: white;
+            }
+
+        .dropdown-menu {
+            margin-left: 0px;
+        }
+
+        #userDropdown {
+            margin-right: 0px;
+        }
+
+        /* Popup styles */
+        .popup {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 600px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            z-index: 1000;
+            padding: 20px;
+            overflow: auto;
+        }
+
+        /* Popup overlay */
+        .popup-overlay {
+            display: none; /* Hidden by default */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        /* Show popup */
+        .popup.show {
+            display: block;
+        }
+
+        .popup-overlay.show {
+            display: block;
+        }
+
+        /* Close button styles */
+        .popup-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* Notification badge */
+        .notification-badge {
+            position: absolute;
+            top: 1px;
+            right: -10px;
+            background-color: #ffffff00;
+            color: red;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight:bold;
+        
+        }
+
+        #cartIcon {
+            position: relative; /* To position the badge correctly */
+        }
     </style>
-
-
-
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light  border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light border-bottom box-shadow mb-3">
             <div class="container-fluid">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Tech Mart</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
@@ -46,55 +122,109 @@
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Products" asp-action="Index">Products</a>
-
-
                         </li>
-
-
-
                     </ul>
 
                     <div style="display: flex; justify-content: flex-end; align-items: center;">
-                        <a class="nav-link text-dark" asp-controller="Cart" asp-action="Index" style="margin-right: 15px;">
+                        <a id="cartIcon" class="nav-link text-dark" style="margin-right">
                             <i class="fas fa-shopping-cart"></i>
+                            <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
                         </a>
-
-                        <div class="dropdown">
-                            <a class="nav-link text-dark dropdown-toggle" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-user"></i>
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="userDropdown" style="justify-content:flex-start">
-                                <li>
-                                    <form asp-controller="Account" asp-action="Logout" method="post">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="dropdown-item">Logout</button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </div>
-
                     </div>
 
+                    <div class="dropdown" style="margin-right: 35px;">
+                        <a class="nav-link text-dark dropdown-toggle" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user"></i> <span id="userEmail"></span>
+                        </a>
+
+                        <ul class="dropdown-menu" aria-labelledby="userDropdown" style="left:80px; justify-content:center">
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="document.getElementById('logout-form').submit();">Logout</a>
+                                <form id="logout-form" asp-controller="Account" asp-action="Logout" method="post" style="display: none;">
+                                    @Html.AntiForgeryToken()
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-
-
             </div>
         </nav>
     </header>
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted" style=" display: none;">
+    <footer class="border-top footer text-muted" style="display: none;">
         <div class="container">
             &copy; 2024 - WebApp1 - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+
+    <!-- Cart popup overlay -->
+    <div id="popupOverlay" class="popup-overlay"></div>
+
+    <!-- Cart popup content -->
+    <div id="popup" class="popup">
+        <span id="popupClose" class="popup-close">&times;</span>
+        <h2 class="text-center mb-5">Your Shopping Cart</h2>
+        <div id="cartContent">
+            <!-- Cart content will be loaded here -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Set user email from TempData
+            var userEmail = '@TempData["UserEmail"]';
+            if (userEmail) {
+                localStorage.setItem('userEmail', userEmail);
+            }
+            document.getElementById('userEmail').innerText = localStorage.getItem('userEmail');
+
+            // Initialize cart item count
+            updateCartItemCount();
+            setInterval(updateCartItemCount, 1000); // Update every 5 seconds
+
+        });
+
+        document.getElementById('cartIcon').addEventListener('click', function () {
+            fetch('/Cart/CartPartial')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('cartContent').innerHTML = html;
+                    document.getElementById('popup').classList.add('show');
+                    document.getElementById('popupOverlay').classList.add('show');
+                });
+        });
+
+        document.getElementById('popupClose').addEventListener('click', function () {
+            document.getElementById('popup').classList.remove('show');
+            document.getElementById('popupOverlay').classList.remove('show');
+        });
+
+        document.getElementById('popupOverlay').addEventListener('click', function () {
+            document.getElementById('popup').classList.remove('show');
+            document.getElementById('popupOverlay').classList.remove('show');
+        });
+
+        function updateCartItemCount() {
+            fetch('/Cart/GetCartItemCount') // Assume this endpoint returns the cart item count
+                .then(response => response.json())
+                .then(count => {
+                    var badge = document.getElementById('notificationBadge');
+                    badge.innerText = count;
+                    badge.style.display = count > 0 ? 'block' : 'none';
+                }).catch(error => console.error('Error fetching cart item count:', error));
+            
+        }
+        
+    </script>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
