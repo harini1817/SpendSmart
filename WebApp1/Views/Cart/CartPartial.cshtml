@@ -1,12 +1,6 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
-@model IEnumerable<CartItemService.Services.CartItem>
+﻿@model IEnumerable<CartItemService.Services.CartItem>
 
 <div>
-
     @if (Model == null || !Model.Any())
     {
         <p>Your cart is empty.</p>
@@ -23,16 +17,34 @@
                 </tr>
             </thead>
             <tbody>
+                @{
+                    decimal totalAmount = 0;
+                }
                 @foreach (var item in Model)
                 {
+                    decimal itemTotal = item.Price * item.Quantity;
+                    totalAmount += itemTotal;
                     <tr>
                         <td>@item.Name</td>
                         <td>@item.Price</td>
                         <td>@item.Quantity</td>
-                        <td>@(item.Price * item.Quantity)</td>
+                        <td>@itemTotal</td>
                     </tr>
                 }
             </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" style="text-align:right;"><strong>Total Amount:</strong></td>
+                    <td><strong>@totalAmount</strong></td>
+                </tr>
+            </tfoot>
         </table>
     }
 </div>
+
+<style>
+    .table > :not(:last-child) > :last-child > * {
+        border-bottom-color: #9c99df7a;
+        background-color: rgb(244 241 253);
+    }
+</style>

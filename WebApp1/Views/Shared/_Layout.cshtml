@@ -7,10 +7,27 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        #addressForm input[type="text"] {
+            padding: 10px; /* Adds padding inside the input */
+            margin-bottom: 10px; /* Adds space below each input */
+            border: 1px solid #ccc; /* Adds a border around the input */
+            border-radius: 4px; /* Rounds the corners of the input */
+            width: 100%; /* Makes the input fields fill the container width */
+            box-sizing: border-box; /* Ensures padding and border are included in the width */
+        }
         #logoutform:hover {
             background-color: #32046869;
+        }
+
+        .Checkout_btn {
+            color: #171717;
+            background-color: #8e74cca6;
+            border-color: #8e74cca6;
+            
         }
 
         .navbar {
@@ -43,17 +60,17 @@
 
         /* Popup styles */
         .popup {
-            display: none; /* Hidden by default */
+            display: none;
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             width: 80%;
             max-width: 600px;
-            background-color: white;
+            background-color: #e9e9ee;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
-            z-index: 1000;
+            z-index: 1001;
             padding: 20px;
             overflow: auto;
         }
@@ -67,7 +84,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
-            z-index: 999;
+            z-index: 1000;
         }
 
         /* Show popup */
@@ -88,27 +105,54 @@
             cursor: pointer;
         }
 
+        element.style {
+            display: grid !important;
+        }
         /* Notification badge */
         .notification-badge {
             position: absolute;
-            top: 1px;
-            right: -10px;
-            background-color: #ffffff00;
-            color: red;
-            border-radius: 50%;
+            top: 0px;
+            right: -3px;
+            background-color: #f80606bf;
+            color: white;
+            border-radius: 100%;
             width: 20px;
             height: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 12px;
-            font-weight:bold;
-        
+            text-align: center; /* Ensure the text is centered horizontally */
+            /* font-weight: bold; */
         }
+
+        .btn-order {
+            color: #171717;
+            background-color: #d6d1e200;
+            
+        }
+
+        .btn-order:hover{
+                background-color: #d6d1e200;
+            }
 
         #cartIcon {
             position: relative; /* To position the badge correctly */
         }
+
+        .checkButton{
+            margin-left: 450px;
+            margin-top: 10px;
+        }
+
+        .backButton{
+            padding:1px;
+            margin-left: -435px;
+            margin-top: -34px;
+        }
+
+
+
     </style>
 </head>
 <body>
@@ -126,13 +170,27 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Products" asp-action="Index">Products</a>
                         </li>
                     </ul>
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <!-- Order details section -->
+                        <div>
+                            <a class="nav-link text-dark" asp-controller="Order" asp-action="Details">Order Details</a>
 
-                    <div style="display: flex; justify-content: flex-end; align-items: center;">
-                        <a id="cartIcon" class="nav-link text-dark" style="margin-right">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
-                        </a>
-                    </div>
+                        </div>
+                    }
+
+
+                    @if (!User.IsInRole("Admin"))
+                    {
+                        <div style="display: flex; justify-content: flex-end; align-items: center;">
+                            <a id="cartIcon" class="nav-link text-dark" style="margin-right">
+                                <i class="fas fa-shopping-cart"></i>
+                                <span id="notificationBadge" class="notification-badge">0</span>
+                            </a>
+                        </div>
+                    }
+
+                   
 
                     <div class="dropdown" style="margin-right: 35px;">
                         <a class="nav-link text-dark dropdown-toggle" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -172,56 +230,250 @@
     <div id="popup" class="popup">
         <span id="popupClose" class="popup-close">&times;</span>
         <h2 class="text-center mb-5">Your Shopping Cart</h2>
+        
         <div id="cartContent">
-            <!-- Cart content will be loaded here -->
+           
+
+        </div>
+        <div class="text-center mt-4">
+            <button id="checkoutButton" class="btn Checkout_btn">Proceed</button>
+
+        </div>
+
+        <div id="addressFormContainer" style="display: none;">
+            <form id="addressForm">
+                <input type="text" id="address" name="address" placeholder="Address" required><br>
+                <input type="text" id="contact" name="contact" required placeholder="Contact"><br>
+                <div class="checkButton">
+                    <button type="submit" class="btn Checkout_btn">Check Out</button>
+                    <div class="backButton">
+                        <button type="button" id="backToCartButton" class="btn Checkout_btn" style="width:80px">Back</button>
+
+                    </div>
+                </div>
+
+                
+                
+                
+            </form>
+            
+            
+
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Set user email from TempData
+           
             var userEmail = '@TempData["UserEmail"]';
             if (userEmail) {
-                localStorage.setItem('userEmail', userEmail);
+                //localStorage.setItem('userEmail', userEmail);
+                localStorage.setItem('userEmailForDisplay', userEmail);
+
+                // Store user email for order details
+                localStorage.setItem('userEmailForOrder', userEmail);
             }
-            document.getElementById('userEmail').innerText = localStorage.getItem('userEmail');
+            document.getElementById('userEmail').innerText = localStorage.getItem('userEmailForDisplay');
 
-            // Initialize cart item count
+           
             updateCartItemCount();
-            setInterval(updateCartItemCount, 1000); // Update every 5 seconds
+           
+            document.getElementById('checkoutButton').addEventListener('click', function () {
+                event.preventDefault();
+                fetch('/Cart/CheckOut', {
+                    method: 'POST'
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Checkout failed with status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // Hide the cart content and the checkout button
+                            document.getElementById('cartContent').style.display = 'none';
+                            document.getElementById('checkoutButton').style.display = 'none'; // Hide the checkout button
+                            document.getElementById('addressFormContainer').style.display = 'block';
+
+                            // Add event listener for the address form submission
+                            document.getElementById('addressForm').addEventListener('submit', function (event) {
+                                event.preventDefault();
+
+                               
+
+                                
+                                const Address = document.getElementById('address').value;
+                                const Contact = document.getElementById('contact').value;
+                                const OrderedBy = localStorage.getItem('userEmailForDisplay');
+
+                                // Fetch product details
+                                fetch('/Cart/GetProductDetails')
+                                    .then(response => {
+                                        if (!response.ok) {
+                                            throw new Error(`Failed to fetch product details: ${response.status}`);
+                                        }
+                                        return response.json();
+                                    })
+                                    .then(data => {
+                                        console.log('Fetched product details:', data); // Debugging log
+
+                                        if (!data.items) {
+                                            throw new Error('No items found in the fetched data.');
+                                        }
+
+                                        const ProductInfo = JSON.stringify(data.items.map(item => ({
+                                            productid: item.productId,
+                                            productName: item.productName,
+                                            price: item.price,
+                                            quantity: item.quantity
+                                        })));
+
+                                       // console.log('Product details to be sent:', ProductDetails); // Debugging log
+                                        const productArray = JSON.parse(ProductInfo);
+                                        let totalAmount = 0;
+
+                                        productArray.forEach(item => {
+                                            totalAmount += item.price * item.quantity;
+                                        });
+
+                                        console.log('Total Amount:', totalAmount);
+
+                                        const requestBody = JSON.stringify({
+                                            Address,
+                                            Contact,
+                                            OrderedBy,
+                                            ProductDetails: ProductInfo,
+                                            TotalAmount:totalAmount
+                                        });
+                                        console.log('Request Body:', requestBody); // Log the request body content
+
+                                        return fetch('/Order/SaveOrderDetails', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json'
+                                            },
+                                            body: requestBody
+                                        })
+
+                                    })
+                                    .then(response => {
+                                        if (!response.ok) {
+                                            throw new Error(`Failed to save order details: ${response.status}`);
+                                        }
+                                        return response.json();
+                                    })
+                                    .then(data => {
+                                        if (data.success) {
+                                            alert('Your order has been placed successfully.');
+
+                                            // Clear the cart after saving the order
+                                            return fetch('/Cart/ClearCart', {
+                                                method: 'POST'
+                                            });
+                                        } else {
+                                            throw new Error('Error saving your order. Please try again.');
+                                        }
+                                    })
+                                    .then(response => {
+                                        if (!response.ok) {
+                                            throw new Error(`Failed to clear cart: ${response.status}`);
+                                        }
+                                        return response.json();
+                                    })
+                                    .then(data => {
+                                        if (data.success) {
+                                            updateCartItemCount();
+                                            // Update the view after saving details
+                                            document.getElementById('cartContent').style.display = 'block';
+
+                                            document.getElementById('popup').classList.remove('show');
+                                            document.getElementById('popupOverlay').classList.remove('show');
+                                            document.getElementById('addressFormContainer').style.display = 'none';
+                                        } else {
+                                            throw new Error('Error clearing the cart. Please try again.');
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        alert(error.message);
+                                    });
+                            }, { once: true });
+                        } else {
+                            throw new Error('Error during checkout. Please try again.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error during checkout:', error);
+                        alert(error.message);
+                    });
+            });
+
 
         });
+       
+            document.getElementById('cartIcon').addEventListener('click', function () {
+                fetch('/Cart/CartPartial')
+                    .then(response => response.text())
+                    .then(html => {
+                        document.getElementById('cartContent').innerHTML = html;
+                        document.getElementById('popup').classList.add('show');
+                        document.getElementById('popupOverlay').classList.add('show');
+                        //updateCartItemCount();
+                  
 
-        document.getElementById('cartIcon').addEventListener('click', function () {
-            fetch('/Cart/CartPartial')
-                .then(response => response.text())
-                .then(html => {
-                    document.getElementById('cartContent').innerHTML = html;
-                    document.getElementById('popup').classList.add('show');
-                    document.getElementById('popupOverlay').classList.add('show');
-                });
-        });
+                    });
+            });
+        
+        
+        
 
         document.getElementById('popupClose').addEventListener('click', function () {
             document.getElementById('popup').classList.remove('show');
             document.getElementById('popupOverlay').classList.remove('show');
+           
         });
 
         document.getElementById('popupOverlay').addEventListener('click', function () {
             document.getElementById('popup').classList.remove('show');
             document.getElementById('popupOverlay').classList.remove('show');
+            
+
         });
 
         function updateCartItemCount() {
-            fetch('/Cart/GetCartItemCount') // Assume this endpoint returns the cart item count
+            fetch('/Cart/GetCartItemCount') 
                 .then(response => response.json())
                 .then(count => {
                     var badge = document.getElementById('notificationBadge');
                     badge.innerText = count;
                     badge.style.display = count > 0 ? 'block' : 'none';
-                }).catch(error => console.error('Error fetching cart item count:', error));
-            
+
+                    var checkoutButton = document.getElementById('checkoutButton');
+                    checkoutButton.style.display = count > 0 ? 'block' : 'none'; 
+                })
+                .catch(error => console.error('Error fetching cart item count:', error));
         }
+
+        function updateCartContents() {
+            fetch('/Cart/CartPartial')
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('cartContent').innerHTML = html;
+                })
+                .catch(error => console.error('Error fetching cart contents:', error));
+        }
+
+        document.getElementById('backToCartButton').addEventListener('click', function () {
+            document.getElementById('cartContent').style.display = 'block'; // Unhide the cart content
+            document.getElementById('checkoutButton').style.display = 'block'; // Unhide the checkout button
+            document.getElementById('addressFormContainer').style.display = 'none'; // Hide the address form container
+
+            // Optional: Update cart item count
+            // updateCartItemCount();
+        });
+
+
         
     </script>
 
@@ -229,5 +481,7 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+    @RenderSection("Scripts", required: false)
+
 </body>
 </html>

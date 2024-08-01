@@ -3,13 +3,14 @@ using Microsoft.Extensions.Options;
 using WebApp1.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
-using CartItemService.Services; // Import the namespace for CartService
-
+using CartItemService.Services;
+using Iemailsender.Services;
+using Emailsender.Services;
 namespace WebApp1
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -26,13 +27,12 @@ namespace WebApp1
 
             // Add Identity services
             builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
             builder.Services.ConfigureApplicationCookie(options =>
             {
-                // Ensure cookies are used securely
+                
                 options.Cookie.HttpOnly = true;
                 options.Cookie.SameSite = SameSiteMode.Strict; // Adjust as needed
                 options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Ensure cookies are sent only over HTTPS
@@ -48,6 +48,9 @@ namespace WebApp1
                 options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
             });
             builder.Services.AddScoped<CartService>();
+            builder.Services.AddTransient<ICustomEmailSender, CustomEmailSender>();
+
+
 
             // Add session services
             builder.Services.AddDistributedMemoryCache(); // Adds a default in-memory implementation of IDistributedCache
@@ -57,6 +60,9 @@ namespace WebApp1
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true; // Ensure the session cookie is used
             });
+           
+            builder.Services.AddHttpContextAccessor();
+
 
             var app = builder.Build();
 
@@ -91,18 +97,15 @@ namespace WebApp1
                 name: "register",
                 pattern: "{controller=Account}/{action=Register}/{id?}");
 
-            
-
-
             app.MapRazorPages();
 
             // Seed roles and admin user
-            SeedDatabase(app);
+            await SeedDatabase(app);
 
             app.Run();
         }
 
-        private static void SeedDatabase(WebApplication app)
+        private static async Task SeedDatabase(WebApplication app)
         {
             using var scope = app.Services.CreateScope();
             var services = scope.ServiceProvider;
@@ -112,33 +115,29 @@ namespace WebApp1
             var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
 
             // Seed roles
-            Task.Run(async () =>
+            if (!await roleManager.RoleExistsAsync("Admin"))
             {
-                if (!await roleManager.RoleExistsAsync("Admin"))
-                {
-                    await roleManager.CreateAsync(new IdentityRole("Admin"));
-                }
+                await roleManager.CreateAsync(new IdentityRole("Admin"));
+            }
 
-                if (!await roleManager.RoleExistsAsync("User"))
-                {
-                    await roleManager.CreateAsync(new IdentityRole("User"));
-                }
+            if (!await roleManager.RoleExistsAsync("User"))
+            {
+                await roleManager.CreateAsync(new IdentityRole("User"));
+            }
 
-                // Seed admin user
-                var adminUser = await userManager.FindByEmailAsync("admin@example.com");
-                if (adminUser == null)
+            // Seed admin user
+            var adminUser = await userManager.FindByEmailAsync("harinisree2023@gmail.com");
+            if (adminUser == null)
+            {
+                adminUser = new IdentityUser { UserName = "harinisree2023@gmail.com", Email = "harinisree2023@gmail.com" };
+                var result = await userManager.CreateAsync(adminUser, "Harini@123");
+                if (result.Succeeded)
                 {
-                    adminUser = new IdentityUser { UserName = "admin@example.com", Email = "admin@example.com" };
-                    var result = await userManager.CreateAsync(adminUser, "Admin@123");
-                    if (result.Succeeded)
-                    {
-                        await userManager.AddToRoleAsync(adminUser, "Admin");
-                    }
+                    await userManager.AddToRoleAsync(adminUser, "Admin");
                 }
+            }
 
-                // Seed other users as needed
-                // ...
-            }).Wait();
+            
         }
     }
 }

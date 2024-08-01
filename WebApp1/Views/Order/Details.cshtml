@@ -1,0 +1,60 @@
+﻿@model List<OrderProduct.Controllers.Order>
+
+@{
+    ViewData["Title"] = "Order Details";
+}
+
+<h2 class="text-center mb-5">Order Details</h2>
+
+<div class="table-container">
+    <table class="table" id="orderTable">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Address</th>
+                <th>Contact</th>
+                <th>OrderedBy</th>
+                <th>Product Details</th>
+                <th>Total Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in Model)
+            {
+                <tr class="order-row">
+                    <td>@order.Id</td>
+                    <td>@order.Address</td>
+                    <td>@order.Contact</td>
+                    <td>@order.OrderedBy</td>
+                    <td>@Html.Raw(order.ProductDetails) <!-- Assuming ProductDetails is HTML formatted or JSON -->
+                    <td>@order.TotalAmount</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .table-container {
+        max-height: 500px; /* Adjust height as needed */
+        overflow-y: auto;
+        display: block;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .table thead {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .table th, .table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+</style>

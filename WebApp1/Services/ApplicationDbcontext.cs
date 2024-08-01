@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using OrderProduct.Controllers;
 using WebApp1.Models;
 
 namespace WebApp1.Services
@@ -12,5 +13,7 @@ namespace WebApp1.Services
         }
 
         public DbSet<Product> Products { get; set; }
+        public DbSet<Order> Orders { get; set; }
+
     }
 }

@@ -1,5 +1,6 @@
 ﻿@model List<Product>
 @{
+    var categories = Model.Select(p => p.Category).Distinct().ToList();
 }
 
 <h2 class="text-center mb-5">List of Products</h2>
@@ -13,6 +14,10 @@
         {
             <select class="form-select" aria-label="Category Filter" id="categoryFilter">
                 <option value="">Select Category</option>
+                @foreach (var category in categories)
+                {
+                    <option value="@category">@category</option>
+                }
             </select>
         }
     </div>
@@ -20,49 +25,72 @@
     </div>
 </div>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Brand</th>
-            <th>Category</th>
-            <th>Price</th>
-            <th>Image</th>
-            <th>Created At</th>
-            <th>Action</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var product in Model)
-        {
+<div class="table-container">
+    <table class="table" id="productTable">
+        <thead>
             <tr>
-                <td>@product.Id</td>
-                <td>@product.Name</td>
-                <td>@product.Brand</td>
-                <td>@product.Category</td>
-                <td>@product.Price</td>
-                <td><img src="/products/@product.ImageFileName" width="100" /></td>
-                <td>@product.CreatedAt.ToString("MM/dd/yyyy")</td>
-                <td style="white-space:nowrap">
-                    @if (User.IsInRole("Admin"))
-                    {
-                        <a class="btn btn-primary btn-sm" asp-controller="products" asp-action="Edit" asp-route-id="@product.Id">Edit</a>
-                        <a class="btn btn-danger btn-sm" asp-controller="products" asp-action="Delete" asp-route-id="@product.Id">Delete</a>
-                    }
-                    else
-                    {
-                        <button class="btn btn-primary btn-sm add-to-cart" data-id="@product.Id" data-name="@product.Name" data-price="@product.Price">Add To Cart</button>
-                    }
-                </td>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Brand</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Image</th>
+                <th>Created At</th>
+                <th>Action</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var product in Model)
+            {
+                <tr class="product-row" data-category="@product.Category">
+                    <td>@product.Id</td>
+                    <td>@product.Name</td>
+                    <td>@product.Brand</td>
+                    <td>@product.Category</td>
+                    <td>@product.Price</td>
+                    <td><img src="/products/@product.ImageFileName" width="100" /></td>
+                    <td>@product.CreatedAt.ToString("MM/dd/yyyy")</td>
+                    <td style="white-space:nowrap">
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <a class="btn btn-primary btn-sm" asp-controller="products" asp-action="Edit" asp-route-id="@product.Id">Edit</a>
+                            <a class="btn btn-danger btn-sm" asp-controller="products" asp-action="Delete" asp-route-id="@product.Id">Delete</a>
+                        }
+                        else
+                        {
+                            <button class="btn btn-primary btn-sm add-to-cart" data-id="@product.Id" data-name="@product.Name" data-price="@product.Price">Add To Cart</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
     $(document).ready(function () {
+        // Handle category filter change
+        $("#categoryFilter").change(function () {
+            var selectedCategory = $(this).val();
+
+            if (selectedCategory === "") {
+                // Show all products
+                $(".product-row").show();
+            } else {
+                // Filter products by selected category
+                $(".product-row").each(function () {
+                    var productCategory = $(this).data("category");
+                    if (productCategory === selectedCategory) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
+        });
+
+        // Existing add-to-cart functionality
         $(".add-to-cart").click(function (e) {
             e.preventDefault();
             var button = $(this);
@@ -77,6 +105,10 @@
                 success: function (response) {
                     if (response.success) {
                         alert("Product added to cart!");
+                        updateCartItemCount();
+                        updateCartContents();
+
+                       
                     } else {
                         alert("There was an error adding the product to the cart.");
                     }
@@ -88,3 +120,40 @@
         });
     });
 </script>
+
+<style>
+
+    .form-select {
+        border-color: #987dd85c;
+    }
+    .table > :not(:last-child) > :last-child > * {
+        border-bottom-color: #9c99df7a;
+    }
+    table > :not(:last-child) > :last-child > * {
+        background-color: #f5f1ff;
+        border-top: 10px;
+        align-content:center;
+        justify-content:center;
+    }
+    .table-container {
+        max-height: 500px; /* Adjust height as needed */
+        overflow-y: auto;
+        display: block;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .table thead {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .table th, .table td {
+            padding: 0.75rem;
+            text-align: left;
+        }
+</style>

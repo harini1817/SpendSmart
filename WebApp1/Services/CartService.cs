@@ -51,11 +51,7 @@ namespace CartItemService.Services
             var cart = GetCartItems();
             return cart.Count();
         }
-        public void ClearCart()
-        {
-            var session = _httpContextAccessor.HttpContext.Session;
-            session.Remove("Cart");
-        }
+       
 
         private void SaveCartItems(List<CartItem> cart)
         {
@@ -63,6 +59,37 @@ namespace CartItemService.Services
             var cartJson = JsonSerializer.Serialize(cart);
             session.SetString("Cart", cartJson);
         }
+
+        public string CheckOut()
+        {
+            var cart = GetCartItems();
+
+
+            // ClearCart();
+
+            return "Order placed successfully!";
+        }
+
+        public void ClearCart()
+        {
+            var session = _httpContextAccessor.HttpContext.Session;
+            session.Remove("Cart");
+            GetCartItems();
+        }
+
+        public decimal GetTotalCost()
+        {
+            var cart = GetCartItems();
+            return cart.Sum(i => i.Price * i.Quantity);
+        }
+
+        public CartItem GetCartItemById(int productId)
+        {
+            var cart = GetCartItems();
+            return cart.FirstOrDefault(i => i.Id == productId);
+        }
+
+
     }
 
     public class CartItem
